@@ -6,6 +6,12 @@ services:
     image: cruilla-comfy
     ports:
       - "8188:8188"
+    environment:
+      # kornia 0.8.x segfaults when torch.jit.script compiles it at import.
+      # Disabling the JIT makes torch.jit.script a pass-through and avoids it.
+      - PYTORCH_JIT=0
+    # Still segfaults (exit 139) -> fallback: pin kornia in the Dockerfile and rebuild:
+    # RUN pip3 install "kornia==0.7.4" (add after the install_comfy line)
     volumes:
       - "${COMFY_MODELS_DIR:-./Comfy/models}:/app/Comfy/models"
       - "./Comfy/input:/app/Comfy/input"
