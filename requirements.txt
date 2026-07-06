@@ -9,6 +9,7 @@ wandb
 opencv-python
 mediapipe==0.10.21
 requests
+websocket-client
 loguru
 gradio==5.33.1
 paramiko==3.5.0

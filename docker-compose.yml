@@ -1,0 +1,36 @@
+services:
+  comfy:
+    build:
+      context: .
+      dockerfile: comfy_service/Dockerfile
+    image: cruilla-comfy
+    ports:
+      - "8188:8188"
+    volumes:
+      - "${COMFY_MODELS_DIR:-./Comfy/models}:/app/Comfy/models"
+      - "./Comfy/input:/app/Comfy/input"
+      - "./Comfy/output:/app/Comfy/output"
+      - "hf-cache:/root/.cache/huggingface"
+      # Workflow
+      - "./3ingredients API.json:/app/3ingredients API.json:ro"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Weight downloader. Run once before starting comfy:
+  #   docker compose run --rm download
+  download:
+    image: cruilla-comfy
+    profiles: ["tools"]
+    volumes:
+      - "${COMFY_MODELS_DIR:-./Comfy/models}:/app/Comfy/models"
+      - "hf-cache:/root/.cache/huggingface"
+    command: ["python", "/app/comfy_service/download_models.py"]
+
+volumes:
+  hf-cache:
