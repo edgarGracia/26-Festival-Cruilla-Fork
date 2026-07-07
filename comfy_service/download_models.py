@@ -45,6 +45,15 @@ MANIFEST: list[ModelSpec] = [
         remote_file="Qwen2.5-VL-7B-Instruct-Q4_K_S.gguf",
         dest_subdir="clip",
     ),
+    # Vision tower for the GGUF text encoder. ComfyUI-GGUF finds it by
+    # filename: same dir as the text encoder, containing "mmproj" and the
+    # encoder's name without quant suffix ("qwen2.5-vl-7b-instruct").
+    ModelSpec(
+        repo_id="unsloth/Qwen2.5-VL-7B-Instruct-GGUF",
+        remote_file="mmproj-F16.gguf",
+        dest_subdir="clip",
+        local_name="Qwen2.5-VL-7B-Instruct-mmproj-F16.gguf",
+    ),
     ModelSpec(
         repo_id="Comfy-Org/Qwen-Image_ComfyUI",
         remote_file="split_files/vae/qwen_image_vae.safetensors",
