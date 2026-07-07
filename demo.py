@@ -112,7 +112,7 @@ body, gradio-app, .gradio-container {{
     visibility: visible;
     position: fixed;
     left: 11.5vw;
-    top: 44.5vh;
+    top: 11vh;
     width: 18.75vw;
     max-width: none;
     z-index: 10;
