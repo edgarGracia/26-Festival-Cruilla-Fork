@@ -25,4 +25,27 @@ echo "Installing torch ($CUDA)"
 echo "Installing requirements"
 "$VENV/bin/python" -m pip install -r "$ROOT/requirements.txt"
 
+# ── ACE-Step 1.5 (cloned into models/, installed with uv) ──────────────────
+MODELS_DIR="$ROOT/models"
+ACE_DIR="$MODELS_DIR/ACE-Step-1.5"
+
+if [ ! -d "$ACE_DIR" ] || [ -z "$(ls -A "$ACE_DIR" 2>/dev/null)" ]; then
+    echo "Cloning ACE-Step-1.5 into $MODELS_DIR"
+    mkdir -p "$MODELS_DIR"
+    git clone https://github.com/ace-step/ACE-Step-1.5.git "$ACE_DIR"
+else
+    echo "ACE-Step-1.5 already exists at $ACE_DIR"
+fi
+
+# Install uv if missing
+if ! command -v uv >/dev/null 2>&1; then
+    echo "Installing uv"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # uv lands in ~/.local/bin; add to PATH for this session
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
+echo "Running uv sync in ACE-Step-1.5"
+(cd "$ACE_DIR" && uv sync)
+
 echo "Done. Activate with: source .venv/bin/activate"
