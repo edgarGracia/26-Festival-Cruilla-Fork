@@ -30,19 +30,49 @@ root_path = Path(__file__).parent
 
 # Assets paths
 camera_button_path = str(root_path / "res/camera.png").replace("\\", "/")
+home_background_path = str(root_path / "res/home_background.png").replace("\\", "/")
+generation_background_path = str(root_path / "res/generation_background.png").replace("\\", "/")
+result_background_path = str(root_path / "res/result_background.png").replace("\\", "/")
 
 # Page CSS
 main_css = f"""
 body, gradio-app, .gradio-container {{
     background: #ffec04 !important;
 }}
+
+#home_background, #generation_background, #result_background,
+#generating_background {{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
+    background-position: top left;
+    background-repeat: no-repeat;
+    z-index: 5;
+    pointer-events: none;
+}}
+#home_background {{
+    background-image: url("/gradio_api/file={home_background_path}");
+}}
+#generation_background {{
+    background-image: url("/gradio_api/file={generation_background_path}");
+}}
+#result_background, #generating_background {{
+    background-image: url("/gradio_api/file={result_background_path}");
+}}
+
 #qr_code_text {{
     position: fixed;
     left: -9999px;
 }}
+
 #webcam_photo {{
     border-width: 0px !important;
     pointer-events: none;
+    background: transparent;
+    visibility: hidden;
 }}
 #webcam_photo [title="grant webcam access"] {{
     display: none !important;
@@ -50,41 +80,71 @@ body, gradio-app, .gradio-container {{
 #webcam_photo .button-wrap {{
     display: none !important;
 }}
-#webcam_photo {{
-    max-width: {config.ui_cam_max_width}px;
-    margin: 0 auto;
-}}
-#take_photo_column {{
-    position: relative;
+#webcam_photo video, #webcam_photo img {{
+    visibility: visible;
+    position: fixed;
+    left: 50vw;
+    top: 50vh;
+    transform: translate(-50%, -50%);
+    width: 64vw;
+    max-width: none;
+    z-index: 1;
 }}
 #countdown_wrap {{
-    position: absolute;
-    inset: 0;
     pointer-events: none;
-    z-index: 150;
 }}
 #countdown {{
-    position: absolute;
-    top: 50%;
-    left: 50%;
+    position: fixed;
+    top: 50vh;
+    left: 50vw;
     transform: translate(-50%, -50%);
     display: none;
     font-size: 25vh;
     color: white;
     text-shadow: 0 0 20px rgba(0,0,0,0.6);
+    z-index: 150;
 }}
-#home_message {{
-    text-align: center;
-    font-size: 5vh;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-top: 20vh;
+
+#qr_image {{
+    visibility: hidden;
+}}
+#qr_image img {{
+    visibility: visible;
+    position: fixed;
+    left: 11.5vw;
+    top: 44.5vh;
+    width: 18.75vw;
+    max-width: none;
+    z-index: 10;
+    pointer-events: none;
+}}
+#result_video {{
+    visibility: hidden;
+}}
+#result_video video {{
+    visibility: visible;
+    position: fixed;
+    left: 67.2vw;
+    top: 49.8vh;
+    transform: translate(-50%, -50%);
+    width: 57vw;
+    max-width: none;
+    z-index: 1;
+}}
+#button_restart {{
+    position: fixed;
+    bottom: 4vh;
+    left: 11.5vw;
+    width: 18.75vw;
+    z-index: 100;
+    font-size: 3vh;
 }}
 #spinner_wrap {{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 60vh;
+    position: fixed;
+    left: 67.2vw;
+    top: 49.8vh;
+    transform: translate(-50%, -50%);
+    z-index: 100;
 }}
 #spinner {{
     width: 80px;
@@ -103,13 +163,13 @@ body, gradio-app, .gradio-container {{
     background-position: center;
     background-repeat: no-repeat;
     background-color: transparent;
-    position: absolute;
-    bottom: 5%;
-    left: 50%;
+    position: fixed;
+    bottom: 3vh;
+    left: 50vw;
     transform: translateX(-50%);
     z-index: 100;
-    height: 11%;
-    width: 10%;
+    height: 11vh;
+    width: 10vw;
 }}
 """  # noqa: F541
 
@@ -207,10 +267,13 @@ take_photo_js = f"""
 html_count_down = """<div id="countdown" class="countdown-container"></div>"""
 
 
-html_generating = """<div id="spinner_wrap"><div id="spinner"></div></div>"""
+html_generating = """<div id="generating_background"></div>
+<div id="spinner_wrap"><div id="spinner"></div></div>"""
 
 
-html_home = """<div id="home_message">Escaneja el codi QR<br>que has rebut en completar l'enquesta de l'app del Cruïlla</div>"""
+html_home = """<div id="home_background"></div>"""
+html_generation = """<div id="generation_background"></div>"""
+html_result = """<div id="result_background"></div>"""
 
 
 def parse_qr(gr_text_qr_code: str) -> T_USER_VECT:
@@ -388,6 +451,7 @@ with gr.Blocks(js=main_js, css=main_css) as demo:
     with gr.Column(
         visible=state is State.take_photo, elem_id="take_photo_column"
     ) as gr_col_take_photo:
+        gr.HTML(html_generation)
         gr.HTML(html_count_down, elem_id="countdown_wrap")
         gr_image_photo = gr.Image(
             show_download_button=False,
@@ -406,6 +470,7 @@ with gr.Blocks(js=main_js, css=main_css) as demo:
         gr_html_generating = gr.HTML(html_generating)
 
     with gr.Column(visible=state is State.results) as gr_col_result:
+        gr.HTML(html_result)
         with gr.Row():
             with gr.Column(scale=1):
                 gr_image_result_qr = gr.Image(
@@ -417,7 +482,9 @@ with gr.Blocks(js=main_js, css=main_css) as demo:
                     elem_id="qr_image",
                     every=1,
                 )
-                gr_button_result_restart = gr.Button("Restart")
+                gr_button_result_restart = gr.Button(
+                    "Tornar a començar", elem_id="button_restart"
+                )
             gr_video_results = gr.Video(
                 None,
                 show_label=False,
@@ -426,6 +493,7 @@ with gr.Blocks(js=main_js, css=main_css) as demo:
                 show_share_button=False,
                 loop=True,
                 scale=10,
+                elem_id="result_video",
             )
 
     gr_button_qr_input.click(
