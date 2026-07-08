@@ -12,6 +12,7 @@ if [ ! -f "$ROOT/.venv/bin/activate" ]; then
 fi
 
 source "$ROOT/.venv/bin/activate"
+cd "$ROOT"
 
 "$ROOT/run_comfy.sh" &
 COMFY_PID=$!
