@@ -36,6 +36,8 @@ import unicodedata
 import multiprocessing as mp
 from pathlib import Path
 
+import config
+
 # ── Repo root & module paths ───────────────────────────────────────────────
 # NOTA: con start method "spawn", cada proceso hijo re-ejecuta este script
 # como módulo __main__ hasta el guard `if __name__ == "__main__":`, así que
@@ -83,9 +85,17 @@ SUBJECT_HEIGHT_FRACTION = 0.72
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────
+# "techno" is the value used by the QR mood/casa selector (demo.py), while
+# the asset dicts below and clothing/Clothing.py use "tecno" as the canonical
+# key. Without this alias, casa="techno" silently misses CASA_STICKERS /
+# TRIBE_BACKGROUNDS and produces an empty path, crashing final video assembly.
+_TRIBE_KEY_ALIASES = {"techno": "tecno"}
+
+
 def _normalise_tribe(raw: str) -> str:
     nfkd = unicodedata.normalize("NFKD", raw.strip())
-    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+    key = "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+    return _TRIBE_KEY_ALIASES.get(key, key)
 
 # "rock" is normalised to "rockstars" to match the accessory folder name.
 _TRIBE_ACCESSORY_FOLDER = {"rock": "rockstars"}
@@ -438,7 +448,12 @@ def step_rich_video(
 # ==============================================================================
 # WORKFLOW DE IMAGEN (face → clothing → background)
 # ==============================================================================
-def workflow_crea_polaroid(image_path: str, output_path: str, language: str) -> dict:
+def workflow_crea_polaroid(
+    image_path: str, output_path: str, language: str, enable_segmentation: bool | None = None,
+) -> dict:
+    if enable_segmentation is None:
+        enable_segmentation = config.enable_person_segmentation
+
     stem = Path(image_path).stem
     timings = {}
 
@@ -457,23 +472,30 @@ def workflow_crea_polaroid(image_path: str, output_path: str, language: str) -> 
         print(f"[landmarks] Failed: {e}")
     timings["step_landmarks"] = time.perf_counter() - t0
 
-    # Segmentation disabled — passing the original image directly to ComfyUI.
-    # Uncomment the block below to re-enable background removal before ComfyUI.
-    # t0 = time.perf_counter()
-    # segmented_output = str(OUTPUT_IMAGES_DIR / f"{stem}_segmented.png")
-    # try:
-    #     from PIL import Image as _PILImage
-    #     from person_segmentation import remove_background_center_person
-    #     _orig = _PILImage.open(image_path).convert("RGB")
-    #     _seg  = remove_background_center_person(_orig)
-    #     _seg.save(segmented_output)
-    #     person_for_comfy = segmented_output
-    #     print(f"[segmentation] Saved → {segmented_output}")
-    # except Exception as e:
-    #     print(f"[segmentation] Failed ({e}), using original image")
-    #     person_for_comfy = image_path
-    # timings["step_segmentation"] = time.perf_counter() - t0
-    person_for_comfy = image_path
+    t0 = time.perf_counter()
+    if enable_segmentation:
+        segmented_output = str(OUTPUT_IMAGES_DIR / f"{stem}_segmented.png")
+        try:
+            from PIL import Image as _PILImage
+            from person_segmentation import remove_background_center_person
+            _orig = _PILImage.open(image_path).convert("RGB")
+            _seg  = remove_background_center_person(_orig)
+            # ComfyUI's LoadImage node does img.convert("RGB") on load, which
+            # drops the alpha channel WITHOUT compositing — pixels behind a
+            # "transparent" cutout (e.g. a second person) are left untouched and
+            # would still reach the model. Flatten onto an opaque background here
+            # so those pixels are actually overwritten before upload.
+            _flat = _PILImage.new("RGB", _seg.size, (255, 255, 255))
+            _flat.paste(_seg, (0, 0), _seg)
+            _flat.save(segmented_output)
+            person_for_comfy = segmented_output
+            print(f"[segmentation] Saved → {segmented_output}")
+        except Exception as e:
+            print(f"[segmentation] Failed ({e}), using original image")
+            person_for_comfy = image_path
+    else:
+        person_for_comfy = image_path
+    timings["step_segmentation"] = time.perf_counter() - t0
 
     poster_output = str(OUTPUT_IMAGES_DIR / f"{stem}_tribe_poster_{language}.png")
     t0 = time.perf_counter()
@@ -513,13 +535,13 @@ def _music_process(mood, instrument, era, casa, gpu_id, queue):
     queue.put(("music", result))
 
 
-def _image_process(image_path, output_path, language, gpu_id, queue):
+def _image_process(image_path, output_path, language, gpu_id, queue, enable_segmentation=None):
     """Corre entero en un proceso de SO dedicado a `gpu_id`."""
     _pin_gpu(gpu_id)
     t0 = time.perf_counter()
     _log_gpu_binding("face-proc")
     try:
-        result = workflow_crea_polaroid(image_path, output_path, language)
+        result = workflow_crea_polaroid(image_path, output_path, language, enable_segmentation)
     except Exception as e:
         result = {"success": False, "error": str(e)}
     result["wall_time_s"] = time.perf_counter() - t0
@@ -541,6 +563,7 @@ def run_pipeline(
     gpu_music: int | None = 0,
     gpu_face: int | None = 1,
     image_delay: float = 0.0,
+    enable_segmentation: bool | None = None,
 ) -> dict:
     OUTPUT_DIR.mkdir(exist_ok=True)
     OUTPUT_IMAGES_DIR.mkdir(exist_ok=True)
@@ -579,7 +602,7 @@ def run_pipeline(
 
     p_face = mp.Process(
         target=_image_process,
-        args=(image_path, output_path, language, gpu_face, queue),
+        args=(image_path, output_path, language, gpu_face, queue, enable_segmentation),
     )
     p_face.start()
     print(f"[orquestador] Proceso de cara lanzado (PID {p_face.pid}) en GPU {gpu_face}")
@@ -672,6 +695,11 @@ if __name__ == "__main__":
     parser.add_argument("--image-delay", type=float, default=0.0,
                          help="Segundos a esperar antes de lanzar el proceso de imagen "
                               "(simula la llegada real 5-10s después de los parámetros)")
+    seg_group = parser.add_mutually_exclusive_group()
+    seg_group.add_argument("--segmentation", dest="segmentation", action="store_true", default=None,
+                            help="Forzar segmentación YOLO+rembg antes de ComfyUI (por defecto: config.py)")
+    seg_group.add_argument("--no-segmentation", dest="segmentation", action="store_false",
+                            help="Desactivar segmentación y enviar la foto original a ComfyUI")
     args = parser.parse_args()
 
     total_start = time.perf_counter()
@@ -682,6 +710,7 @@ if __name__ == "__main__":
         language=args.language, skip_music=not args.with_music,
         gpu_music=args.gpu_music, gpu_face=args.gpu_face,
         image_delay=args.image_delay,
+        enable_segmentation=args.segmentation,
     )
 
     total_duration = time.perf_counter() - total_start

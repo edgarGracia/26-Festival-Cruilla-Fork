@@ -43,10 +43,17 @@ SUBJECT_HEIGHT_FRACTION = 0.72
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────
+# "techno" is the value used by the QR mood/casa selector (demo.py), while
+# the asset dicts below and clothing/Clothing.py use "tecno" as the canonical
+# key. Without this alias, casa="techno" silently misses CASA_STICKERS /
+# TRIBE_BACKGROUNDS and produces an empty path, crashing final video assembly.
+_TRIBE_KEY_ALIASES = {"techno": "tecno"}
+
 
 def _normalise_tribe(raw: str) -> str:
     nfkd = unicodedata.normalize("NFKD", raw.strip())
-    return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+    key = "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+    return _TRIBE_KEY_ALIASES.get(key, key)
 
 # "rock" is normalised to "rockstars" to match the accessory folder name.
 _TRIBE_ACCESSORY_FOLDER = {"rock": "rockstars"}

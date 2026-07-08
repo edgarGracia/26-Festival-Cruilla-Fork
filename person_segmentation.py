@@ -18,8 +18,14 @@ def _get_yolo():
 
 
 def _center_person_mask(np_image: np.ndarray) -> np.ndarray | None:
-    """Mask (uint8, image size) of the person closest to the image centre."""
-    results = _get_yolo()(np_image, verbose=False)
+    """Mask (uint8, image size) of the person closest to the image centre.
+
+    `np_image` is RGB (as produced by PIL). Ultralytics treats raw ndarray
+    inputs as already BGR (OpenCV convention) and unconditionally flips them
+    to RGB internally, so an RGB array must be pre-flipped to BGR here —
+    otherwise the model receives color-inverted input, hurting detection.
+    """
+    results = _get_yolo()(np_image[:, :, ::-1], verbose=False)
 
     for r in results:
         if r.masks is None or len(r.masks.data) == 0:
