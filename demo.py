@@ -7,7 +7,8 @@ from loguru import logger
 from PIL import Image
 
 import config
-from main_parallel import run_pipeline
+# from main_parallel import run_pipeline
+from main_2gpu import run_pipeline
 from upload_utils import upload_results
 
 T_USER_VECT = tuple[str, str, str, str, str]  # mood, instrument, era, casa, locale
