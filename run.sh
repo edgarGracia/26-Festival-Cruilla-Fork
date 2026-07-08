@@ -13,11 +13,15 @@ fi
 
 source "$ROOT/.venv/bin/activate"
 
+"$ROOT/run_comfy.sh" &
+COMFY_PID=$!
+
 python "$ROOT/demo.py" &
 DEMO_PID=$!
 
 cleanup() {
     kill "$DEMO_PID" 2>/dev/null || true
+    kill "$COMFY_PID" 2>/dev/null || true
 }
 trap cleanup EXIT
 
