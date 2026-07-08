@@ -84,12 +84,12 @@ body, gradio-app, .gradio-container {{
 #webcam_photo video, #webcam_photo img {{
     visibility: visible;
     position: fixed;
-    left: 50vw;
-    top: 50vh;
+    left: 54.5vw;
+    top: 58vh;
     transform: translate(-50%, -50%);
-    width: 64vw;
+    width: 80vw;
     max-width: none;
-    z-index: 1;
+    z-index: 6;
 }}
 #countdown_wrap {{
     pointer-events: none;
@@ -112,8 +112,8 @@ body, gradio-app, .gradio-container {{
 #qr_image img {{
     visibility: visible;
     position: fixed;
-    left: 11.5vw;
-    top: 11vh;
+    left: 14vw;
+    top: 27vh;
     width: 18.75vw;
     max-width: none;
     z-index: 10;
@@ -125,25 +125,30 @@ body, gradio-app, .gradio-container {{
 #result_video video {{
     visibility: visible;
     position: fixed;
-    left: 67.2vw;
-    top: 49.8vh;
+    left: 70vw;
+    top: 54vh;
     transform: translate(-50%, -50%);
-    width: 57vw;
+    width: 58vw;
     max-width: none;
-    z-index: 1;
+    z-index: 6;
 }}
 #button_restart {{
     position: fixed;
-    bottom: 4vh;
-    left: 11.5vw;
-    width: 18.75vw;
+    top: 901px;
+    left: 655px;
+    width: 144px;
+    height: 144px;
     z-index: 100;
-    font-size: 3vh;
+    font-size: 0;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: transparent !important;
 }}
 #spinner_wrap {{
     position: fixed;
-    left: 67.2vw;
-    top: 49.8vh;
+    left: 69vw;
+    top: 55vh;
     transform: translate(-50%, -50%);
     z-index: 100;
 }}
