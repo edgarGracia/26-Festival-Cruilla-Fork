@@ -18,9 +18,9 @@ CONFIG = {
     "casa_sticker_path": "/home/spG07/code/Festival-Cruilla/final_video/casas/Casa_Urban.png",
     "casa_nombre":       "Urban",
     "artistas": [
-        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/spG07/data/Fake_Artists/4/4_1.png"},
-        {"name": "Artista 2",  "confidence": 6,  "image": "/home/spG07/data/Fake_Artists/2/2_1.png"},
-        {"name": "Artista 3",  "confidence": 5,  "image": "/home/spG07/data/Fake_Artists/19/image (1).png"},
+        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/4/4_1.png"},
+        {"name": "Artista 2",  "confidence": 6,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/2/2_1.png"},
+        {"name": "Artista 3",  "confidence": 5,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/19/image (1).png"},
     ],
     "output_path": "/home/spG07/code/Festival-Cruilla/final_video/resultado_FERNANDO.mp4",
 
@@ -428,6 +428,10 @@ def generar_video(cfg=CONFIG):
     # El Bloque 3 ahora usa el ancho asimétrico óptimo de la Polaroid sin recortes
     pane_casa      = build_casa(cfg, w_casa, H, int(w_casa * 0.65), int(w_casa * 0.65 / 1.1875))
     pane_polaroid_static = contain_resize(img_polaroid_orig, w_polaroid, H)
+    if pane_polaroid_static.size != (w_polaroid, H):
+        # thumbnail() only guarantees fitting *within* the box, rounding can leave
+        # it 1px off in either dimension, which crashes Image.blend() downstream.
+        pane_polaroid_static = pane_polaroid_static.resize((w_polaroid, H), Image.LANCZOS)
     pane_polaroid = {"full_text": pane_polaroid_static.convert("RGB"), "fotos": []}
 
     foto_delay_f = cfg["foto_delay"] * fps
@@ -460,7 +464,9 @@ def generar_video(cfg=CONFIG):
         ("polaroid", pane_polaroid, w_polaroid)
     ]
     with ThreadPoolExecutor(max_workers=4) as executor:
-        executor.map(_render_pane_sequence, tasks)
+        # list() forces iteration so exceptions raised inside worker threads
+        # propagate here instead of being silently dropped by the unread map().
+        list(executor.map(_render_pane_sequence, tasks))
 
     t1 = time.time()
     print(f"   PIL Render Completed in ({t1 - t0:.2f}s)")

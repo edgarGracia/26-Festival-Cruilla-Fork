@@ -11,18 +11,18 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 # CONFIGURACIÓN - LINKS PRUEBA
 # ==============================================================================
 CONFIG = {
-    "polaroid_path":     "/home/spG07/code/Festival-Cruilla/final_video/img/image_tribe_poster_es.png",
-    "fondo_derecha_path":"/home/spG07/code/Festival-Cruilla/final_video/img/fondo.png",
-    "landmarks_path":    "/home/spG07/code/Festival-Cruilla/final_video/img/image_landmarks.png",
-    "music_path":        "/home/spG07/code/Festival-Cruilla/final_video/img/8e02cfb3-9c6e-3654-d5fd-e5e6fc4b1298.wav",
-    "casa_sticker_path": "/home/spG07/code/Festival-Cruilla/final_video/casas/Casa_Urban.png",
+    "polaroid_path":     "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/img/image_tribe_poster_es.png",
+    "fondo_derecha_path":"/home/cvcadmin/cruilla/Festival-Cruilla/final_video/img/fondo.png",
+    "landmarks_path":    "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/img/image_landmarks.png",
+    "music_path":        "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/img/8e02cfb3-9c6e-3654-d5fd-e5e6fc4b1298.wav",
+    "casa_sticker_path": "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/casas/Casa_Urban.png",
     "casa_nombre":       "Urban",
     "artistas": [
-        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/spG07/data/Fake_Artists/4/4_1.png"},
-        {"name": "Artista 2",  "confidence": 6,  "image": "/home/spG07/data/Fake_Artists/2/2_1.png"},
-        {"name": "Artista 3",  "confidence": 5,  "image": "/home/spG07/data/Fake_Artists/19/image (1).png"},
+        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/4/4_1.png"},
+        {"name": "Artista 2",  "confidence": 6,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/2/2_1.png"},
+        {"name": "Artista 3",  "confidence": 5,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/19/image (1).png"},
     ],
-    "output_path": "/home/spG07/code/Festival-Cruilla/final_video/resultado_NV5.mp4",
+    "output_path": "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/resultado_NV5.mp4",
 
     # Idioma de los textos en pantalla: "ca" | "es" | "en"
     "language": "ca",

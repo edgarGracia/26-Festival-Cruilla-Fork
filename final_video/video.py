@@ -33,17 +33,17 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance, ImageOps
 # CONFIGURACIÓN - LINKS PRUEBA
 # ==============================================================================
 CONFIG = {
-    "polaroid_path":     "/home/spG07/code/Festival-Cruilla/outputs/images/sonia1_tribe_poster_ca.png",
-    "landmarks_path":    "/home/spG07/code/Festival-Cruilla/outputs/landmarks/sonia1_landmarks.png",
-    "music_path":        "/home/spG07/code/Festival-Cruilla/outputs/music/af05bfeb-bd23-859d-133c-cb776de370ad.wav",
-    "casa_sticker_path": "/home/spG07/code/Festival-Cruilla/final_video/casas/Casa_Techno.png",
+    "polaroid_path":     "/home/cvcadmin/cruilla/Festival-Cruilla/outputs/images/sonia1_tribe_poster_ca.png",
+    "landmarks_path":    "/home/cvcadmin/cruilla/Festival-Cruilla/outputs/landmarks/sonia1_landmarks.png",
+    "music_path":        "/home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/af05bfeb-bd23-859d-133c-cb776de370ad.wav",
+    "casa_sticker_path": "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/casas/Casa_Techno.png",
     "casa_nombre":       "Tecno",
     "artistas": [
-        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/spG07/data/Fake_Artists/4/4_1.png"},
-        {"name": "Artista 2",  "confidence": 6,  "image": "/home/spG07/data/Fake_Artists/2/2_1.png"},
-        {"name": "Artista 3",  "confidence": 5,  "image": "/home/spG07/data/Fake_Artists/19/image (1).png"},
+        {"name": "Lena Pulse", "confidence": 8,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/4/4_1.png"},
+        {"name": "Artista 2",  "confidence": 6,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/2/2_1.png"},
+        {"name": "Artista 3",  "confidence": 5,  "image": "/home/cvcadmin/cruilla/Festival-Cruilla/Fake_Artists/19/image (1).png"},
     ],
-    "output_path": "/home/spG07/code/Festival-Cruilla/final_video/resultado_ffmpeg.mp4",
+    "output_path": "/home/cvcadmin/cruilla/Festival-Cruilla/final_video/resultado_ffmpeg.mp4",
 
     # Technical parameters
     "resolucion":          (1920, 1080),

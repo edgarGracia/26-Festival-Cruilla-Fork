@@ -3,7 +3,7 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 
-CANONICAL_CSV = "/home/spG07/data/Fake_Artist.csv"
+CANONICAL_CSV = str(Path(__file__).resolve().parents[2] / "Fake_Artist.csv")
 
 class FakeArtistsDataset(Dataset):
     def __init__(self, root_dir: str, csv_path: str = CANONICAL_CSV, transform=None):

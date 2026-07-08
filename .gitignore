@@ -232,3 +232,4 @@ models/instantid/README.md
 /result_image.png
 /outputs/
 /Fake_Artists/
+yolov8n-seg.pt
