@@ -8,7 +8,7 @@ import subprocess
 import time
 from pathlib import Path
 
-OUTPUT_DIR = Path("/home/spG07/code/Festival-Cruilla/outputs/music/metrics")
+OUTPUT_DIR = Path("/home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/metrics")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Audio files that were just generated (from server logs)
@@ -17,16 +17,16 @@ AUDIO_FILES = [
         "id": "A",
         "label": "hype_reggaeton_futuristic",
         "paths": [
-            "/home/spG07/code/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/c87549a0-16fe-198a-9dc0-ca328982cacb.wav",
-            "/home/spG07/code/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/3f29b31e-166f-1a62-8976-2b68a54e9bc6.wav",
+            "/home/cvcadmin/cruilla/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/c87549a0-16fe-198a-9dc0-ca328982cacb.wav",
+            "/home/cvcadmin/cruilla/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/3f29b31e-166f-1a62-8976-2b68a54e9bc6.wav",
         ]
     },
     {
         "id": "B",
         "label": "chill_jazz_soul_90s",
         "paths": [
-            "/home/spG07/code/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/d9ddffcb-b93c-4498-df06-1112087e104e.wav",
-            "/home/spG07/code/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/06006db9-3085-2291-b7ae-2d8ea4044b32.wav",
+            "/home/cvcadmin/cruilla/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/d9ddffcb-b93c-4498-df06-1112087e104e.wav",
+            "/home/cvcadmin/cruilla/Festival-Cruilla/models/ACE-Step-1.5/.cache/acestep/tmp/api_audio/06006db9-3085-2291-b7ae-2d8ea4044b32.wav",
         ]
     },
 ]

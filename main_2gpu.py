@@ -49,8 +49,8 @@ sys.path.insert(0, str(REPO_ROOT / "final_video"))
 # ── Default artifact paths ─────────────────────────────────────────────────
 MODEL_PATH           = REPO_ROOT / "face2label" / "logs" / "artists_mlp.pth"
 LABELS_PATH          = REPO_ROOT / "face2label" / "logs" / "labels.json"
-METADATA_PATH        = Path("/home/spG07/data/Fake_Artist.csv")
-DATASET_DIR          = Path("/home/spG07/data/Fake_Artists")
+METADATA_PATH        = REPO_ROOT / "Fake_Artist.csv"
+DATASET_DIR          = REPO_ROOT / "Fake_Artists"
 ASSET_DIR            = REPO_ROOT / "inputs"
 OUTPUT_DIR           = REPO_ROOT / "outputs"
 OUTPUT_IMAGES_DIR    = OUTPUT_DIR / "images"
@@ -59,7 +59,7 @@ OUTPUT_VIDEO_DIR     = OUTPUT_DIR / "final_video"
 OUTPUT_LANDMARKS_DIR = OUTPUT_DIR / "landmarks"
 CASAS_DIR            = REPO_ROOT / "final_video" / "casas"
 TEMPLATES_DIR        = REPO_ROOT / "final_video" / "templates"
-FONDO_DERECHA        = Path("/home/spG07/code/Festival-Cruilla/final_video/img/fondo.png")
+FONDO_DERECHA        = Path("/home/cvcadmin/cruilla/Festival-Cruilla/final_video/img/fondo.png")
 
 CASA_STICKERS = {
     "indie": str(CASAS_DIR / "Casa_Indie.png"),
@@ -86,6 +86,77 @@ SUBJECT_HEIGHT_FRACTION = 0.72
 def _normalise_tribe(raw: str) -> str:
     nfkd = unicodedata.normalize("NFKD", raw.strip())
     return "".join(c for c in nfkd if not unicodedata.combining(c)).lower()
+
+# "rock" is normalised to "rockstars" to match the accessory folder name.
+_TRIBE_ACCESSORY_FOLDER = {"rock": "rockstars"}
+
+# accessory type (inputs/accesories/{casa}/{type}/) -> (name used in the
+# prompt, where on the body ComfyUI should place it).
+_ACCESSORY_PLACEMENT = {
+    "glasses": (
+        "a pair of glasses",
+        "on the person's face, resting on the bridge of the nose with the temples reaching to the sides of the head. "
+        "Scale the glasses so the frame spans only the width of the person's eyes — no wider than the face. "
+        "They must sit flush against the face as if physically worn, not floating or oversized.",
+    ),
+    "hats": (
+        "a hat",
+        "on top of the person's head, sitting naturally on the crown of the hair. "
+        "Size it proportionally to the head — the brim should not extend beyond shoulder width. "
+        "The hat must look like it is resting on the head, not floating above it.",
+    ),
+    "necklaces": (
+        "a necklace",
+        "around the person's neck, hanging naturally at chest level against the clothing or skin. "
+        "Scale it proportionally to the person's neck and torso — the pendant should be no larger than a fist. "
+        "The chain should follow the curvature of the neck and chest, not float in front of the body.",
+    ),
+}
+
+def _pick_random_accessory(tribe_key: str, asset_dir: str) -> tuple[str, str] | None:
+    """Returns (accessory_image_path, accessory_type) or None.
+
+    accessory_type is the name of the immediate parent folder (e.g. "hats",
+    "glasses", "necklaces"), used to tell ComfyUI what the object is and
+    where on the body to place it.
+    """
+    import random
+    folder_name = _TRIBE_ACCESSORY_FOLDER.get(tribe_key, tribe_key)
+    for acc_root_name in ("accesories", "accessories"):
+        tribe_dir = Path(asset_dir) / acc_root_name / folder_name
+        if tribe_dir.is_dir():
+            pngs = [p for p in tribe_dir.rglob("*.png") if p.is_file()]
+            if not pngs:
+                return None
+            chosen = random.choice(pngs)
+            return str(chosen), chosen.parent.name
+    return None
+
+
+def _build_polaroid_prompt(accessory_type: str) -> str:
+    label, placement = _ACCESSORY_PLACEMENT.get(
+        accessory_type,
+        (
+            "the accessory",
+            "on the person in a natural, proportionate position. "
+            "Scale it to a realistic, wearable size relative to the person's body — do not make it oversized.",
+        ),
+    )
+    return (
+        "Use Image 1 as the base photo. Preserve its composition, framing, lighting style, "
+        "colors, design elements, text, logos, borders, and overall layout exactly as they are.\n\n"
+        "Take the person from Image 2 and place them naturally into the scene of Image 1. "
+        "Remove the original environment from Image 2 completely. Preserve the person's identity, "
+        "face, expression, hairstyle, body proportions, clothing, pose, and natural appearance.\n\n"
+        f"Image 3 shows {label}. Place it {placement} "
+        "Match the person's pose, scale, and perspective. "
+        "The accessory must be correctly sized for a real human body — if it appears too large relative "
+        "to the person, scale it down until it looks naturally wearable. "
+        "Ensure correct contact points, shadows, occlusion, and lighting.\n\n"
+        "Blend everything seamlessly into Image 1. Match the lighting, color temperature, "
+        "contrast, sharpness, and perspective of the base photo. The final result should look "
+        "like a single real photograph, not a collage."
+    )
 
 
 def _pin_gpu(gpu_id: int | None) -> None:
@@ -160,6 +231,24 @@ def step_clothing(user_image_path: str, artist_match: dict, output_path: str,
         asset_dir=str(ASSET_DIR),
         landmarks_path=landmarks_path,
     )
+
+
+# ==============================================================================
+# STEP 2b — LANDMARK EXTRACTION (face mesh + pose skeleton visualisation)
+# ==============================================================================
+def step_landmarks(user_image_path: str, landmarks_path: str) -> bool:
+    import cv2
+    from clothing.Clothing import _get_landmarks, _save_landmarks
+
+    img = cv2.imread(user_image_path)
+    if img is None:
+        print(f"[landmarks] Cannot open image: {user_image_path}")
+        return False
+
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    face_lm, pose_lm = _get_landmarks(rgb)
+    _save_landmarks(img, face_lm, pose_lm, landmarks_path)
+    return True
 
 
 # ==============================================================================
@@ -260,6 +349,44 @@ def step_background(user_image_path: str, artist_match: dict, output_path: str,
     return output_path
 
 # ==============================================================================
+# STEP 4b — COMFYUI POLAROID (AI compositing via remote ComfyUI server)
+# ==============================================================================
+def step_comfy_polaroid(
+    person_image: str,
+    artist_match: dict,
+    output_path: str,
+) -> str:
+    from comfy_client import run_3ingredients_workflow
+
+    raw_tribe = artist_match.get("tribe", "")
+    tribe_key = _normalise_tribe(raw_tribe)
+
+    bg_path = TRIBE_BACKGROUNDS.get(tribe_key)
+    if not bg_path or not Path(bg_path).exists():
+        raise RuntimeError(f"No background image found for tribe '{raw_tribe}'")
+
+    accessory = _pick_random_accessory(tribe_key, str(ASSET_DIR))
+    if not accessory:
+        raise RuntimeError(f"No accessories found for tribe '{tribe_key}'")
+    accessory_path, accessory_type = accessory
+
+    print(f"[comfy] bg={Path(bg_path).name}  "
+          f"person={Path(person_image).name}  "
+          f"accessory={Path(accessory_path).name} (type={accessory_type})")
+
+    image_bytes = run_3ingredients_workflow(
+        base_image=bg_path,
+        person_image=person_image,
+        object_image=accessory_path,
+        prompt=_build_polaroid_prompt(accessory_type),
+    )
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(output_path).write_bytes(image_bytes)
+    print(f"[comfy] Polaroid saved → {output_path}")
+    return output_path
+
+# ==============================================================================
 # STEP 5 — VÍDEO FINAL (CPU/ffmpeg, en local)
 # ==============================================================================
 def step_rich_video(
@@ -323,26 +450,47 @@ def workflow_crea_polaroid(image_path: str, output_path: str, language: str) -> 
         return {"success": False, "error": "No face detected", "timings": timings}
 
     landmarks_path = str(OUTPUT_LANDMARKS_DIR / f"{stem}_landmarks.png")
-
     t0 = time.perf_counter()
-    styled_path = step_clothing(image_path, artist_match, output_path,
-                                 landmarks_path=landmarks_path)
-    timings["step_clothing"] = time.perf_counter() - t0
+    try:
+        step_landmarks(image_path, landmarks_path)
+    except Exception as e:
+        print(f"[landmarks] Failed: {e}")
+    timings["step_landmarks"] = time.perf_counter() - t0
 
-    working_image = styled_path if styled_path else image_path
+    # Segmentation disabled — passing the original image directly to ComfyUI.
+    # Uncomment the block below to re-enable background removal before ComfyUI.
+    # t0 = time.perf_counter()
+    # segmented_output = str(OUTPUT_IMAGES_DIR / f"{stem}_segmented.png")
+    # try:
+    #     from PIL import Image as _PILImage
+    #     from person_segmentation import remove_background_center_person
+    #     _orig = _PILImage.open(image_path).convert("RGB")
+    #     _seg  = remove_background_center_person(_orig)
+    #     _seg.save(segmented_output)
+    #     person_for_comfy = segmented_output
+    #     print(f"[segmentation] Saved → {segmented_output}")
+    # except Exception as e:
+    #     print(f"[segmentation] Failed ({e}), using original image")
+    #     person_for_comfy = image_path
+    # timings["step_segmentation"] = time.perf_counter() - t0
+    person_for_comfy = image_path
 
     poster_output = str(OUTPUT_IMAGES_DIR / f"{stem}_tribe_poster_{language}.png")
     t0 = time.perf_counter()
-    tribe_poster = step_background(
-        user_image_path=working_image, artist_match=artist_match,
-        output_path=poster_output, language=language,
-    )
-    timings["step_background"] = time.perf_counter() - t0
+    try:
+        tribe_poster = step_comfy_polaroid(
+            person_image=person_for_comfy,
+            artist_match=artist_match,
+            output_path=poster_output,
+        )
+    except Exception as e:
+        timings["step_comfy_polaroid"] = time.perf_counter() - t0
+        return {"success": False, "error": f"[comfy] {e}", "timings": timings}
+    timings["step_comfy_polaroid"] = time.perf_counter() - t0
 
     return {
         "success": True,
         "artist_match": artist_match,
-        "styled_image": styled_path,
         "tribe_poster": tribe_poster,
         "landmarks_path": landmarks_path,
         "timings": timings,
@@ -496,7 +644,7 @@ def run_pipeline(
     return {
         "success":      True,
         "artist_match": artist_match,
-        "styled_image": image_result["styled_image"],
+        "styled_image": image_result.get("styled_image"),
         "tribe_poster": tribe_poster,
         "music":        music_result,
         "final_video":  final_video,

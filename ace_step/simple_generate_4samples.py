@@ -12,7 +12,7 @@ from pathlib import Path
 
 # API Configuration
 API_URL = "http://localhost:8001"
-OUTPUT_DIR = Path("/home/spG07/code/Festival-Cruilla/outputs/music/metrics")
+OUTPUT_DIR = Path("/home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/metrics")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 4 Diverse samples

@@ -3,7 +3,7 @@ generate_diversity_samples.py
 ──────────────────────────────
 Generates 4 deliberately contrasting 20-second audio clips using
 build_ace_prompt() from music_generator.py, then saves them to:
-  /home/spG07/code/Festival-Cruilla/outputs/music/metrics/
+  /home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/metrics/
 
 The 4 prompts are chosen to be maximally different from each other
 so the cosine matrix has a wide spread to inspect:
@@ -14,7 +14,7 @@ so the cosine matrix has a wide spread to inspect:
   D — Hype / Electronic Dance / actual     (synth, four-on-the-floor, festival drop)
 
 Run from your project root:
-  cd /home/spG07/code/Festival-Cruilla
+  cd /home/cvcadmin/cruilla/Festival-Cruilla
   python ace_step/generate_diversity_samples.py
 """
 
@@ -26,7 +26,7 @@ import uuid
 from pathlib import Path
 
 # ── make sure the project modules are importable ──────────────────────────────
-PROJECT_ROOT = Path("/home/spG07/code/Festival-Cruilla")
+PROJECT_ROOT = Path("/home/cvcadmin/cruilla/Festival-Cruilla")
 sys.path.insert(0, str(PROJECT_ROOT / "api"))
 
 from music_generator import build_ace_prompt, _call_ace_step
@@ -163,7 +163,7 @@ def main() -> None:
         failed = [s["id"] for s in SAMPLES if s["id"] not in {g["id"] for g in generated}]
         print(f"\n  ⚠  Clips {failed} failed.")
         print("     Check that ACE-Step is running:")
-        print("     cd /home/spG07/code/Festival-Cruilla")
+        print("     cd /home/cvcadmin/cruilla/Festival-Cruilla")
         print("     uv run acestep   (or python -m acestep)")
         print("     Then re-run this script.\n")
 

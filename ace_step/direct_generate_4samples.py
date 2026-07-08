@@ -9,14 +9,14 @@ import os
 from pathlib import Path
 
 # Add ACE-Step to path
-ACE_STEP_PATH = Path("/home/spG07/code/Festival-Cruilla/models/ACE-Step-1.5")
+ACE_STEP_PATH = Path("/home/cvcadmin/cruilla/Festival-Cruilla/models/ACE-Step-1.5")
 sys.path.insert(0, str(ACE_STEP_PATH))
 
 os.chdir(str(ACE_STEP_PATH))
 
 from acestep import generate_music
 
-OUTPUT_DIR = Path("/home/spG07/code/Festival-Cruilla/outputs/music/metrics")
+OUTPUT_DIR = Path("/home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/metrics")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # 4 Diverse samples

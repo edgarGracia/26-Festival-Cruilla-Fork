@@ -24,3 +24,4 @@ accelerate==1.12.0
 pytorch_wavelets
 PyWavelets
 qrcode[pil]
+websocket-client

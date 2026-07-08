@@ -535,7 +535,7 @@ if __name__ == "__main__":
 
     # If no files are passed, automatically use all .wav files in outputs/music
     if not args.files:
-        default_audio_dir = Path("/home/spG07/code/Festival-Cruilla/outputs/music/metrics")
+        default_audio_dir = Path("/home/cvcadmin/cruilla/Festival-Cruilla/outputs/music/metrics")
         args.files = sorted(str(path) for path in default_audio_dir.glob("*.wav"))
 
         if len(args.files) < 2:
