@@ -31,7 +31,7 @@ until curl -s -o /dev/null "$URL"; do
     sleep 1
 done
 
-CHROMIUM_BIN="$(command -v chromium-browser || command -v chromium || command -v google-chrome)"
-"$CHROMIUM_BIN" --start-fullscreen --new-window "$URL"
+CHROMIUM_BIN="$(command -v google-chrome || command -v chromium-browser || command -v chromium)"
+"$CHROMIUM_BIN" --kiosk --start-fullscreen --new-window --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 "$URL"
 
 wait "$DEMO_PID"

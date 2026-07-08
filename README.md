@@ -41,3 +41,6 @@ On Linux:
 On Windows use `run.bat`. Both activate the venv and launch `demo.py`.
 
 This starts the Gradio kiosk UI on `http://localhost:7860` (bound to `0.0.0.0`). ACE-Step 1.5 is loaded in-process, so no separate API server is needed.
+
+
+Set `gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled false` to disable on screen keyboard
