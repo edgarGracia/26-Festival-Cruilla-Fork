@@ -89,7 +89,7 @@ body, gradio-app, .gradio-container {{
     transform: translate(-50%, -50%);
     width: 80vw;
     max-width: none;
-    z-index: 6;
+    z-index: 1;
 }}
 #countdown_wrap {{
     pointer-events: none;
@@ -125,12 +125,12 @@ body, gradio-app, .gradio-container {{
 #result_video video {{
     visibility: visible;
     position: fixed;
-    left: 70vw;
+    left: 71vw;
     top: 54vh;
     transform: translate(-50%, -50%);
-    width: 58vw;
+    width: 57vw;
     max-width: none;
-    z-index: 6;
+    z-index: 1;
 }}
 #button_restart {{
     position: fixed;
